@@ -89,3 +89,15 @@ export {
   getStrategyAssignments,
 } from './strategy';
 export { getSystemInfo, getLicenseStatus, checkUpdate } from './system';
+export {
+  createNexusLogin,
+  pollNexusLoginStatus,
+  getNexusBindStatus,
+  unbindNexus,
+  getBuildList,
+  submitBuild,
+  getBuildStatus,
+  deleteBuild,
+  getBuildFiles,
+  downloadBuildFile,
+} from './nexus';

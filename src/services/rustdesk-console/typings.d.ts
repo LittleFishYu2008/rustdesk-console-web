@@ -821,4 +821,72 @@ declare namespace API {
     success: boolean;
     message: string;
   };
+
+  // Nexus types
+
+  type NexusLoginResult = {
+    login_id: string;
+    auth_url: string;
+    expires_in: number;
+  };
+
+  type NexusLoginStatus = {
+    state: 'pending' | 'completed' | 'failed';
+    nexus_username?: string;
+    expires_in?: number;
+    error?: string;
+  };
+
+  type NexusBindStatus = {
+    bound: boolean;
+    nexus_username?: string;
+    expired?: boolean;
+  };
+
+  type BuildCustomConfig = {
+    password?: string;
+    salt?: string;
+    'conn-type'?: 'incoming' | 'outgoing' | 'both';
+    'disable-installation'?: 'Y' | 'N';
+    'disable-settings'?: 'Y' | 'N';
+    'disable-account'?: 'Y' | 'N';
+    'disable-ab'?: 'Y' | 'N';
+    'disable-tcp-listen'?: 'Y' | 'N';
+    'app-name'?: string;
+    'override-settings'?: Record<string, string>;
+    'default-settings'?: Record<string, string>;
+  };
+
+  type SubmitBuildParams = {
+    os: 'windows';
+    arch: 'x64' | 'arm64' | 'x86';
+    custom: BuildCustomConfig;
+  };
+
+  type SubmitBuildResult = {
+    uuid: string;
+    status: 'pending';
+    message: string;
+  };
+
+  type BuildRecord = {
+    uuid: string;
+    userGuid: string;
+    os: string;
+    arch: string;
+    appName: string;
+    custom: string | null;
+    status: 'pending' | 'building' | 'completed' | 'failed' | 'cancelled';
+    files: string | null;
+    message: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+
+  type BuildStatusResponse = {
+    uuid: string;
+    status: 'pending' | 'building' | 'completed' | 'failed' | 'cancelled';
+    files?: string[];
+    message?: string;
+  };
 }
