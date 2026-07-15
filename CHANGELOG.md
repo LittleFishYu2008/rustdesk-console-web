@@ -1,3 +1,15 @@
+# [1.3.0](https://github.com/databk/rustdesk-console-web/compare/1.2.2...1.3.0) (2026-07-15)
+
+
+### Features
+
+* add custom client generation via Nexus API ([#180](https://github.com/databk/rustdesk-console-web/issues/180)) ([2c5b2a5](https://github.com/databk/rustdesk-console-web/commit/2c5b2a5c7dd16e6ee0d38d35e3d75d782d47c5b4))
+* add Portuguese (Brazil) localization support ([#175](https://github.com/databk/rustdesk-console-web/issues/175)) ([811a9fe](https://github.com/databk/rustdesk-console-web/commit/811a9fed8d157d4a96100002206935a89284da2e))
+* add update check support for POST /api/update-check ([#169](https://github.com/databk/rustdesk-console-web/issues/169)) ([04a6527](https://github.com/databk/rustdesk-console-web/commit/04a652757144b0e87d715b5199ecdee29075039e))
+* make SMTP user and pass fields optional to support non-auth servers ([#181](https://github.com/databk/rustdesk-console-web/issues/181)) ([bc47f52](https://github.com/databk/rustdesk-console-web/commit/bc47f527204e3cd05206b7c1502168b9d8e6ea7a))
+
+
+
 ## [1.2.2](https://github.com/databk/rustdesk-console-web/compare/1.2.1...1.2.2) (2026-06-20)
 
 
@@ -45,15 +57,6 @@
 ### Bug Fixes
 
 * hide SettingDrawer in production environment ([#143](https://github.com/databk/rustdesk-console-web/issues/143)) ([7b00e05](https://github.com/databk/rustdesk-console-web/commit/7b00e05fe591741f137ae4f7b0f145bb86356f5f))
-
-
-
-## [1.1.1](https://github.com/databk/rustdesk-console-web/compare/1.1.0...1.1.1) (2026-06-07)
-
-
-### Features
-
-* add nginx reverse proxy config and docker-compose setup ([#141](https://github.com/databk/rustdesk-console-web/issues/141)) ([036f407](https://github.com/databk/rustdesk-console-web/commit/036f40731ee4375b31408058c9ffd292e6f9ad2a))
 
 
 
