@@ -566,6 +566,7 @@ export default {
   'pages.users.admin': 'Administrador',
   'pages.users.me': 'Eu',
   'pages.oidcProviders.list': 'Provedores OIDC',
+  'pages.oidcProviders.sort': 'Ordenar',
   'pages.oidcProviders.name': 'Nome do Provedor',
   'pages.oidcProviders.type': 'Tipo',
   'pages.oidcProviders.issuer': 'URL do Emissor',
@@ -606,6 +607,7 @@ export default {
   'pages.oidcProviders.disableConfirm':
     'Tem certeza de que deseja desativar este provedor?',
   'pages.oidcProviders.testFailed': 'Falha ao testar conexão OIDC',
+  'pages.oidcProviders.sortFailed': 'Falha ao atualizar ordem dos provedores',
   'pages.oidcProviders.fetchDetailFailed':
     'Falha ao obter detalhes do provedor',
   'pages.account.tab.basic': 'Informações Básicas',
