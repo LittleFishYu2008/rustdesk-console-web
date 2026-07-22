@@ -1,3 +1,25 @@
+# [1.4.0](https://github.com/databk/rustdesk-console-web/compare/1.3.0...1.4.0) (2026-07-22)
+
+
+### Features
+
+* add columns state persistence to all ProTable instances ([#190](https://github.com/databk/rustdesk-console-web/issues/190)) ([8013358](https://github.com/databk/rustdesk-console-web/commit/8013358a0859e43812f6120ea56310aee737a549))
+* add console general settings and configurable watermark ([#197](https://github.com/databk/rustdesk-console-web/issues/197)) ([56839cb](https://github.com/databk/rustdesk-console-web/commit/56839cb06e07b270b9dbe9edcfbfaa2aeebd1b50))
+* add display_name field support for users ([#195](https://github.com/databk/rustdesk-console-web/issues/195)) ([440d319](https://github.com/databk/rustdesk-console-web/commit/440d31971f1274f493034ba295a3be6b1d7a54e2))
+* add linux/arm64 Docker image build support ([#196](https://github.com/databk/rustdesk-console-web/issues/196)) ([16671bc](https://github.com/databk/rustdesk-console-web/commit/16671bc873ba09f9560c082fa40ac26c6ee0dc07))
+* add user_group_guid field to user update ([#203](https://github.com/databk/rustdesk-console-web/issues/203)) ([0515620](https://github.com/databk/rustdesk-console-web/commit/05156206d9f9738e39bc59767f804e2499d72ae3))
+* complete user-group management workflows ([#188](https://github.com/databk/rustdesk-console-web/issues/188)) ([7443ce1](https://github.com/databk/rustdesk-console-web/commit/7443ce1e875a179a38f30cd365ee93d67bc498eb))
+* extend address book sharing to support individual users and everyone ([#200](https://github.com/databk/rustdesk-console-web/issues/200)) ([13a059e](https://github.com/databk/rustdesk-console-web/commit/13a059e5118d35cb1922a13e37929af0a9c44379))
+* implement drag sort for OIDC providers ([#199](https://github.com/databk/rustdesk-console-web/issues/199)) ([3604d41](https://github.com/databk/rustdesk-console-web/commit/3604d41b711e0a419e19dc0f00a83c05333e9aec))
+* manage custom address books from the personal page ([#189](https://github.com/databk/rustdesk-console-web/issues/189)) ([901a24c](https://github.com/databk/rustdesk-console-web/commit/901a24c7f724024b5251619136966599b7cb7918))
+
+
+### Reverts
+
+* remove site name functionality from commit 56839cb ([#202](https://github.com/databk/rustdesk-console-web/issues/202)) ([8fc55cc](https://github.com/databk/rustdesk-console-web/commit/8fc55cc8af04be0650a2e3ef1e66722f836fe796))
+
+
+
 # [1.3.0](https://github.com/databk/rustdesk-console-web/compare/1.2.2...1.3.0) (2026-07-15)
 
 
@@ -48,15 +70,6 @@
 * display user avatar in header navigation bar ([#150](https://github.com/databk/rustdesk-console-web/issues/150)) ([2cdba60](https://github.com/databk/rustdesk-console-web/commit/2cdba6051202f92739c8bcd3dfe5d5d72add9273))
 * implement alarm audit query and extract shared name@ip logic ([#151](https://github.com/databk/rustdesk-console-web/issues/151)) ([669aa13](https://github.com/databk/rustdesk-console-web/commit/669aa137e0bed2b83cc00b742f59e846c0a92465))
 * update release workflow to auto-generate version ([#154](https://github.com/databk/rustdesk-console-web/issues/154)) ([cd298ad](https://github.com/databk/rustdesk-console-web/commit/cd298adce8eaf7dc41a66e855c163c8b1fa2a771))
-
-
-
-## [1.1.2](https://github.com/databk/rustdesk-console-web/compare/1.1.1...1.1.2) (2026-06-07)
-
-
-### Bug Fixes
-
-* hide SettingDrawer in production environment ([#143](https://github.com/databk/rustdesk-console-web/issues/143)) ([7b00e05](https://github.com/databk/rustdesk-console-web/commit/7b00e05fe591741f137ae4f7b0f145bb86356f5f))
 
 
 
