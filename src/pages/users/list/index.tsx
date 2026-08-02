@@ -1,5 +1,4 @@
 import {
-  CrownOutlined,
   DeleteOutlined,
   EditOutlined,
   LogoutOutlined,
@@ -7,11 +6,12 @@ import {
   PlusCircleOutlined,
   PlusOutlined,
   SafetyOutlined,
-  TeamOutlined,
+  SelectOutlined,
+  SwapOutlined,
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { FormattedMessage, useIntl, useModel } from '@umijs/max';
+import { FormattedMessage, useIntl } from '@umijs/max';
 import {
   App,
   Button,
@@ -23,10 +23,10 @@ import {
   Select,
   Space,
   Switch,
-  Tag,
-  Tooltip,
 } from 'antd';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
+import Settings from '../../../../config/defaultSettings';
 import {
   batchForceLogout,
   batchUpdateUserStatus,
@@ -38,13 +38,27 @@ import {
   updateUser,
   updateUserSecurity,
 } from '@/services/rustdesk-console/user';
-import { getAllUserGroups } from '@/services/rustdesk-console/userGroup';
+import {
+  getAllUserGroups,
+  moveUsersToGroup,
+} from '@/services/rustdesk-console/userGroup';
+import { getUserColumns } from '@/components/UserSelectTable/columns';
+import ImportUsersModal from './components/ImportUsersModal';
 
-const UserList: React.FC = () => {
+export interface UserListProps {
+  userGroupGuid?: string;
+  title?: string;
+  onBack?: () => void;
+}
+
+const UserList: React.FC<UserListProps> = ({
+  userGroupGuid,
+  title,
+  onBack,
+}) => {
   const intl = useIntl();
   const { message: msgApi } = App.useApp();
-  const { initialState } = useModel('@@initialState');
-  const currentUser = initialState?.currentUser;
+
   const actionRef = useRef<ActionType>(null);
 
   // Modal states
@@ -69,6 +83,48 @@ const UserList: React.FC = () => {
 
   // Current user being edited
   const [editingUser, setEditingUser] = useState<API.UserItem | null>(null);
+
+  // Group member management states (only used when userGroupGuid is provided)
+  const [destinationGuid, setDestinationGuid] = useState<string>();
+  const [moving, setMoving] = useState(false);
+  const [importModalVisible, setImportModalVisible] = useState(false);
+  const [moveUser, setMoveUser] = useState<API.UserItem | null>(null);
+  const [moveDestinationGuid, setMoveDestinationGuid] = useState<string>();
+
+  useEffect(() => {
+    if (!userGroupGuid) return;
+    void loadUserGroups();
+  }, [userGroupGuid]);
+
+  const handleMove = async (targetGuid: string, userGuids: string[]) => {
+    if (!targetGuid || userGuids.length === 0) return;
+    setMoving(true);
+    try {
+      const result = await moveUsersToGroup(targetGuid, userGuids);
+      msgApi.success(
+        intl.formatMessage(
+          {
+            id: 'pages.userGroups.membersUpdated',
+            defaultMessage: 'Updated {count} user(s)',
+          },
+          { count: result.moved_user_count },
+        ),
+      );
+      setSelectedRowKeys([]);
+      setSelectedRows([]);
+      setDestinationGuid(undefined);
+      actionRef.current?.reload();
+    } catch {
+      msgApi.error(
+        intl.formatMessage({
+          id: 'pages.userGroups.membersUpdateFailed',
+          defaultMessage: 'Failed to update group members',
+        }),
+      );
+    } finally {
+      setMoving(false);
+    }
+  };
 
   const loadUserGroups = async () => {
     if (userGroups.length > 0) return userGroups;
@@ -389,203 +445,29 @@ const UserList: React.FC = () => {
     setSecurityModalVisible(true);
   };
 
-  // Status tag renderer
-  const renderStatusTag = (status: number) => {
-    if (status === 1) {
-      return (
-        <Tag icon={<PlusCircleOutlined />} color="green">
-          <FormattedMessage id="pages.users.active" defaultMessage="Active" />
-        </Tag>
-      );
-    }
-    if (status === 0) {
-      return (
-        <Tag icon={<MinusCircleOutlined />} color="red">
-          <FormattedMessage
-            id="pages.users.disabled"
-            defaultMessage="Disabled"
-          />
-        </Tag>
-      );
-    }
-    if (status === -1) {
-      return (
-        <Tag color="orange">
-          <FormattedMessage
-            id="pages.users.unverified"
-            defaultMessage="Unverified"
-          />
-        </Tag>
-      );
-    }
-    return <Tag>{status}</Tag>;
-  };
+  const baseColumns = getUserColumns();
 
-  const columns: ProColumns<API.UserItem>[] = [
-    {
-      title: (
-        <FormattedMessage id="pages.users.name" defaultMessage="Username" />
-      ),
-      dataIndex: 'name',
-      width: 180,
-      ellipsis: true,
-      render: (_: unknown, record: API.UserItem) => (
-        <Space direction="vertical" size={0}>
-          <Space>
-            <span style={{ fontWeight: 500 }}>
-              {record.display_name || record.name}
-            </span>
-            {record.is_admin && (
-              <Tooltip
-                title={intl.formatMessage({
-                  id: 'pages.users.admin',
-                  defaultMessage: 'Admin',
-                })}
-              >
-                <CrownOutlined style={{ color: '#faad14' }} />
-              </Tooltip>
-            )}
-            {record.name === currentUser?.name && (
-              <Tag color="blue">
-                <FormattedMessage id="pages.users.me" defaultMessage="Me" />
-              </Tag>
-            )}
-          </Space>
-          {record.display_name && (
-            <span style={{ color: '#8c8c8c', fontSize: 12 }}>
-              @{record.name}
-            </span>
-          )}
-        </Space>
-      ),
-    },
-    {
-      title: <FormattedMessage id="pages.users.email" defaultMessage="Email" />,
-      dataIndex: 'email',
-      width: 200,
-      ellipsis: true,
-      render: (_: unknown, record: API.UserItem) => record.email || '-',
-    },
-    {
-      title: (
-        <FormattedMessage id="pages.users.status" defaultMessage="Status" />
-      ),
-      dataIndex: 'status',
-      width: 100,
-      valueType: 'select',
-      valueEnum: {
-        1: {
-          text: intl.formatMessage({
-            id: 'pages.users.active',
-            defaultMessage: 'Active',
-          }),
-          status: 'Success',
-        },
-        0: {
-          text: intl.formatMessage({
-            id: 'pages.users.disabled',
-            defaultMessage: 'Disabled',
-          }),
-          status: 'Error',
-        },
-        [-1]: {
-          text: intl.formatMessage({
-            id: 'pages.users.unverified',
-            defaultMessage: 'Unverified',
-          }),
-          status: 'Warning',
-        },
-      },
-      render: (_: unknown, record: API.UserItem) =>
-        renderStatusTag(record.status),
-    },
-    {
-      title: (
-        <FormattedMessage id="pages.users.isAdmin" defaultMessage="Admin" />
-      ),
-      dataIndex: 'is_admin',
-      width: 80,
-      valueType: 'select',
-      valueEnum: {
-        true: {
-          text: intl.formatMessage({
-            id: 'pages.users.admin',
-            defaultMessage: 'Admin',
-          }),
-          status: 'Processing',
-        },
-        false: {
-          text: intl.formatMessage({
-            id: 'pages.users.normalUser',
-            defaultMessage: 'Normal',
-          }),
-          status: 'Default',
-        },
-      },
-      render: (_: unknown, record: API.UserItem) =>
-        record.is_admin ? (
-          <Tag color="blue">
-            <FormattedMessage id="pages.users.admin" defaultMessage="Admin" />
-          </Tag>
-        ) : (
-          <span>-</span>
-        ),
-    },
-    {
-      title: (
-        <FormattedMessage id="pages.users.strategy" defaultMessage="Strategy" />
-      ),
-      dataIndex: 'strategy_name',
-      width: 120,
-      search: false,
-      render: (_: unknown, record: API.UserItem) => record.strategy_name || '-',
-    },
-    {
-      title: (
-        <FormattedMessage
-          id="pages.users.userGroup"
-          defaultMessage="User Group"
-        />
-      ),
-      dataIndex: 'user_group_name',
-      width: 140,
-      search: false,
-      render: (_: unknown, record: API.UserItem) => (
-        <Space>
-          <TeamOutlined />
-          <span>{record.user_group_name || '-'}</span>
-        </Space>
-      ),
-    },
-    {
-      title: (
-        <FormattedMessage
-          id="pages.users.thirdAuthType"
-          defaultMessage="Auth Type"
-        />
-      ),
-      dataIndex: 'third_auth_type',
-      width: 100,
-      search: false,
-      render: (_: unknown, record: API.UserItem) =>
-        record.third_auth_type || '-',
-    },
-    {
-      title: <FormattedMessage id="pages.users.note" defaultMessage="Note" />,
-      dataIndex: 'note',
-      width: 150,
-      ellipsis: true,
-      search: false,
-      render: (_: unknown, record: API.UserItem) => record.note || '-',
-    },
-    {
-      title: (
-        <FormattedMessage id="pages.common.action" defaultMessage="Action" />
-      ),
-      valueType: 'option',
-      width: 220,
-      fixed: 'right',
-      render: (_: unknown, record: API.UserItem) => (
+  const actionColumn: ProColumns<API.UserItem> = {
+    title: (
+      <FormattedMessage id="pages.common.action" defaultMessage="Action" />
+    ),
+    valueType: 'option',
+    width: 220,
+    fixed: 'right',
+    render: (_: unknown, record: API.UserItem) =>
+      userGroupGuid ? (
+        <Button
+          type="link"
+          size="small"
+          icon={<SwapOutlined />}
+          onClick={() => {
+            setMoveUser(record);
+            setMoveDestinationGuid(undefined);
+          }}
+        >
+          <FormattedMessage id="pages.userGroups.move" defaultMessage="Move" />
+        </Button>
+      ) : (
         <Space size={0} split={<Divider type="vertical" />}>
           <Button
             key="edit"
@@ -647,589 +529,744 @@ const UserList: React.FC = () => {
           </Popconfirm>
         </Space>
       ),
-    },
-  ];
+  };
+
+  const columns = [...baseColumns, actionColumn];
 
   return (
-    <PageContainer>
-      <ProTable<API.UserItem>
-        headerTitle={
-          <FormattedMessage id="pages.users.list" defaultMessage="User List" />
-        }
-        columnsState={{
-          persistenceType: 'localStorage',
-          persistenceKey: 'user_list_columns_state',
-        }}
-        actionRef={actionRef}
-        rowKey="guid"
-        rowSelection={{
-          selectedRowKeys,
-          onChange: (keys, rows) => {
-            setSelectedRowKeys(keys);
-            setSelectedRows(rows);
-          },
-        }}
-        tableAlertOptionRender={() => (
-          <Space size={16}>
-            <Popconfirm
-              title={
-                <FormattedMessage
-                  id="pages.users.batchEnableConfirm"
-                  defaultMessage="Are you sure to enable selected users?"
-                />
-              }
-              onConfirm={handleBatchEnable}
-              okText={intl.formatMessage({
-                id: 'pages.common.confirm',
-                defaultMessage: 'Yes',
-              })}
-              cancelText={intl.formatMessage({
-                id: 'pages.common.cancel',
-                defaultMessage: 'No',
-              })}
-            >
-              <Button
-                type="link"
-                icon={<PlusCircleOutlined />}
-                loading={batchStatusUpdating}
-                style={{ padding: 0 }}
-              >
-                <FormattedMessage
-                  id="pages.users.batchEnable"
-                  defaultMessage="Batch Enable"
-                />
-              </Button>
-            </Popconfirm>
-            <Popconfirm
-              title={
-                <FormattedMessage
-                  id="pages.users.batchDisableConfirm"
-                  defaultMessage="Are you sure to disable selected users?"
-                />
-              }
-              onConfirm={handleBatchDisable}
-              okText={intl.formatMessage({
-                id: 'pages.common.confirm',
-                defaultMessage: 'Yes',
-              })}
-              cancelText={intl.formatMessage({
-                id: 'pages.common.cancel',
-                defaultMessage: 'No',
-              })}
-            >
-              <Button
-                type="link"
-                icon={<MinusCircleOutlined />}
-                loading={batchStatusUpdating}
-                style={{ padding: 0 }}
-              >
-                <FormattedMessage
-                  id="pages.users.batchDisable"
-                  defaultMessage="Batch Disable"
-                />
-              </Button>
-            </Popconfirm>
-            <Popconfirm
-              title={
-                <FormattedMessage
-                  id="pages.users.batchForceLogoutConfirm"
-                  defaultMessage="Are you sure to force logout selected users?"
-                />
-              }
-              onConfirm={handleBatchForceLogout}
-              okText={intl.formatMessage({
-                id: 'pages.common.confirm',
-                defaultMessage: 'Yes',
-              })}
-              cancelText={intl.formatMessage({
-                id: 'pages.common.cancel',
-                defaultMessage: 'No',
-              })}
-            >
-              <Button
-                type="link"
-                icon={<LogoutOutlined />}
-                loading={batchForceLoggingOut}
-                style={{ padding: 0 }}
-              >
-                <FormattedMessage
-                  id="pages.users.batchForceLogout"
-                  defaultMessage="Batch Force Logout"
-                />
-              </Button>
-            </Popconfirm>
-          </Space>
-        )}
-        request={async (params) => {
-          const result = await getAdminUserList({
-            current: params.current || 1,
-            pageSize: params.pageSize || 20,
-            status: params.status,
-            name: params.name,
-            email: params.email,
-            is_admin:
-              params.is_admin === 'true'
-                ? 1
-                : params.is_admin === 'false'
-                  ? 0
-                  : undefined,
-          });
-          return {
-            data: result.data || [],
-            total: result.total || 0,
-            success: true,
-          };
-        }}
-        columns={columns}
-        search={{
-          labelWidth: 'auto',
-          defaultCollapsed: true,
-          optionRender: (_searchConfig, _formProps, dom) => [...dom.reverse()],
-        }}
-        pagination={{
-          defaultPageSize: 20,
-          showSizeChanger: true,
-          showQuickJumper: true,
-        }}
-        scroll={{ x: 1540 }}
-        toolBarRender={() => [
-          <Button
-            key="create"
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={openCreateModal}
-          >
-            <FormattedMessage id="pages.users.create" defaultMessage="Create" />
-          </Button>,
-          <Button
-            key="invite"
-            icon={<PlusOutlined />}
-            onClick={openInviteModal}
-          >
-            <FormattedMessage id="pages.users.invite" defaultMessage="Invite" />
-          </Button>,
-        ]}
-        options={{
-          density: true,
-          setting: {
-            listsHeight: 400,
-          },
-          fullScreen: false,
-          reload: true,
-        }}
-      />
-
-      {/* Create User Modal */}
-      <Modal
+    <>
+      {title && (
+        <Helmet>
+          <title>
+            {title}
+            {Settings.title && ` - ${Settings.title}`}
+          </title>
+        </Helmet>
+      )}
+      <PageContainer
         title={
-          <FormattedMessage
-            id="pages.users.create"
-            defaultMessage="Create User"
-          />
-        }
-        open={createModalVisible}
-        onCancel={() => setCreateModalVisible(false)}
-        onOk={() => createForm.submit()}
-      >
-        <Form form={createForm} onFinish={handleCreate} layout="vertical">
-          <Form.Item
-            name="name"
-            label={
-              <FormattedMessage
-                id="pages.users.name"
-                defaultMessage="Username"
-              />
-            }
-            rules={[
-              {
-                required: true,
-                message: intl.formatMessage({
-                  id: 'pages.common.pleaseEnterUsername',
-                  defaultMessage: 'Please enter username',
-                }),
-              },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="display_name"
-            label={
-              <FormattedMessage
-                id="pages.users.displayName"
-                defaultMessage="Display Name"
-              />
-            }
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="password"
-            label={
-              <FormattedMessage
-                id="pages.users.password"
-                defaultMessage="Password"
-              />
-            }
-            rules={[
-              {
-                required: true,
-                message: intl.formatMessage({
-                  id: 'pages.common.pleaseEnterPassword',
-                  defaultMessage: 'Please enter password',
-                }),
-              },
-            ]}
-          >
-            <Input.Password />
-          </Form.Item>
-          <Form.Item
-            name="email"
-            label={
-              <FormattedMessage id="pages.users.email" defaultMessage="Email" />
-            }
-            rules={[
-              {
-                type: 'email',
-                message: intl.formatMessage({
-                  id: 'pages.common.pleaseEnterValidEmail',
-                  defaultMessage: 'Please enter valid email',
-                }),
-              },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="note"
-            label={
-              <FormattedMessage id="pages.users.note" defaultMessage="Note" />
-            }
-          >
-            <Input.TextArea />
-          </Form.Item>
-          <Form.Item
-            name="user_group_guid"
-            label={
-              <FormattedMessage
-                id="pages.users.userGroup"
-                defaultMessage="User Group"
-              />
-            }
-          >
-            <Select
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              loading={userGroupsLoading}
-              placeholder={intl.formatMessage({
-                id: 'pages.users.selectUserGroup',
-                defaultMessage: 'Select user group',
-              })}
-              options={userGroups.map((group) => ({
-                label: group.name,
-                value: group.guid,
-              }))}
+          title || (
+            <FormattedMessage
+              id="pages.users.list"
+              defaultMessage="User List"
             />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Invite User Modal */}
-      <Modal
-        title={
-          <FormattedMessage
-            id="pages.users.invite"
-            defaultMessage="Invite User"
-          />
+          )
         }
-        open={inviteModalVisible}
-        onCancel={() => setInviteModalVisible(false)}
-        onOk={() => inviteForm.submit()}
+        onBack={onBack}
       >
-        <Form form={inviteForm} onFinish={handleInvite} layout="vertical">
-          <Form.Item
-            name="name"
-            label={
-              <FormattedMessage
-                id="pages.users.name"
-                defaultMessage="Username"
-              />
-            }
-            rules={[
-              {
-                required: true,
-                message: intl.formatMessage({
-                  id: 'pages.common.pleaseEnterUsername',
-                  defaultMessage: 'Please enter username',
-                }),
-              },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="display_name"
-            label={
-              <FormattedMessage
-                id="pages.users.displayName"
-                defaultMessage="Display Name"
-              />
-            }
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="email"
-            label={
-              <FormattedMessage id="pages.users.email" defaultMessage="Email" />
-            }
-            rules={[
-              {
-                required: true,
-                message: intl.formatMessage({
-                  id: 'pages.common.pleaseEnterEmail',
-                  defaultMessage: 'Please enter email',
-                }),
-              },
-              {
-                type: 'email',
-                message: intl.formatMessage({
-                  id: 'pages.common.pleaseEnterValidEmail',
-                  defaultMessage: 'Please enter valid email',
-                }),
-              },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="note"
-            label={
-              <FormattedMessage id="pages.users.note" defaultMessage="Note" />
-            }
-          >
-            <Input.TextArea />
-          </Form.Item>
-          <Form.Item
-            name="user_group_guid"
-            label={
-              <FormattedMessage
-                id="pages.users.userGroup"
-                defaultMessage="User Group"
-              />
-            }
-          >
-            <Select
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              loading={userGroupsLoading}
-              placeholder={intl.formatMessage({
-                id: 'pages.users.selectUserGroup',
-                defaultMessage: 'Select user group',
-              })}
-              options={userGroups.map((group) => ({
-                label: group.name,
-                value: group.guid,
-              }))}
+        <ProTable<API.UserItem>
+          headerTitle={
+            <FormattedMessage
+              id="pages.users.list"
+              defaultMessage="User List"
             />
-          </Form.Item>
-        </Form>
-      </Modal>
+          }
+          columnsState={{
+            persistenceType: 'localStorage',
+            persistenceKey: 'user_list_columns_state',
+          }}
+          actionRef={actionRef}
+          rowKey="guid"
+          rowSelection={{
+            selectedRowKeys,
+            onChange: (keys, rows) => {
+              setSelectedRowKeys(keys);
+              setSelectedRows(rows);
+            },
+          }}
+          tableAlertOptionRender={() =>
+            userGroupGuid ? (
+              <Space size={16}>
+                <Select
+                  aria-label={intl.formatMessage({
+                    id: 'pages.userGroups.destination',
+                    defaultMessage: 'Destination group',
+                  })}
+                  showSearch
+                  optionFilterProp="label"
+                  loading={userGroupsLoading}
+                  value={destinationGuid}
+                  onChange={setDestinationGuid}
+                  placeholder={intl.formatMessage({
+                    id: 'pages.userGroups.selectDestination',
+                    defaultMessage: 'Select destination group',
+                  })}
+                  options={userGroups
+                    .filter((g) => g.guid !== userGroupGuid)
+                    .map((g) => ({ label: g.name, value: g.guid }))}
+                  style={{ width: 200 }}
+                />
+                <Button
+                  type="link"
+                  icon={<SwapOutlined />}
+                  disabled={!destinationGuid || selectedRows.length === 0}
+                  loading={moving}
+                  onClick={() =>
+                    destinationGuid &&
+                    handleMove(
+                      destinationGuid,
+                      selectedRows.map((r) => r.guid),
+                    )
+                  }
+                  style={{ padding: 0 }}
+                >
+                  <FormattedMessage
+                    id="pages.userGroups.batchMove"
+                    defaultMessage="Batch Move"
+                  />
+                </Button>
+              </Space>
+            ) : (
+              <Space size={16}>
+                <Popconfirm
+                  title={
+                    <FormattedMessage
+                      id="pages.users.batchEnableConfirm"
+                      defaultMessage="Are you sure to enable selected users?"
+                    />
+                  }
+                  onConfirm={handleBatchEnable}
+                  okText={intl.formatMessage({
+                    id: 'pages.common.confirm',
+                    defaultMessage: 'Yes',
+                  })}
+                  cancelText={intl.formatMessage({
+                    id: 'pages.common.cancel',
+                    defaultMessage: 'No',
+                  })}
+                >
+                  <Button
+                    type="link"
+                    icon={<PlusCircleOutlined />}
+                    loading={batchStatusUpdating}
+                    style={{ padding: 0 }}
+                  >
+                    <FormattedMessage
+                      id="pages.users.batchEnable"
+                      defaultMessage="Batch Enable"
+                    />
+                  </Button>
+                </Popconfirm>
+                <Popconfirm
+                  title={
+                    <FormattedMessage
+                      id="pages.users.batchDisableConfirm"
+                      defaultMessage="Are you sure to disable selected users?"
+                    />
+                  }
+                  onConfirm={handleBatchDisable}
+                  okText={intl.formatMessage({
+                    id: 'pages.common.confirm',
+                    defaultMessage: 'Yes',
+                  })}
+                  cancelText={intl.formatMessage({
+                    id: 'pages.common.cancel',
+                    defaultMessage: 'No',
+                  })}
+                >
+                  <Button
+                    type="link"
+                    icon={<MinusCircleOutlined />}
+                    loading={batchStatusUpdating}
+                    style={{ padding: 0 }}
+                  >
+                    <FormattedMessage
+                      id="pages.users.batchDisable"
+                      defaultMessage="Batch Disable"
+                    />
+                  </Button>
+                </Popconfirm>
+                <Popconfirm
+                  title={
+                    <FormattedMessage
+                      id="pages.users.batchForceLogoutConfirm"
+                      defaultMessage="Are you sure to force logout selected users?"
+                    />
+                  }
+                  onConfirm={handleBatchForceLogout}
+                  okText={intl.formatMessage({
+                    id: 'pages.common.confirm',
+                    defaultMessage: 'Yes',
+                  })}
+                  cancelText={intl.formatMessage({
+                    id: 'pages.common.cancel',
+                    defaultMessage: 'No',
+                  })}
+                >
+                  <Button
+                    type="link"
+                    icon={<LogoutOutlined />}
+                    loading={batchForceLoggingOut}
+                    style={{ padding: 0 }}
+                  >
+                    <FormattedMessage
+                      id="pages.users.batchForceLogout"
+                      defaultMessage="Batch Force Logout"
+                    />
+                  </Button>
+                </Popconfirm>
+              </Space>
+            )
+          }
+          request={async (params) => {
+            const result = await getAdminUserList({
+              current: params.current || 1,
+              pageSize: params.pageSize || 20,
+              status: params.status,
+              name: params.name,
+              email: params.email,
+              is_admin:
+                params.is_admin === 'true'
+                  ? 1
+                  : params.is_admin === 'false'
+                    ? 0
+                    : undefined,
+              user_group_guid: userGroupGuid,
+            });
+            return {
+              data: result.data || [],
+              total: result.total || 0,
+              success: true,
+            };
+          }}
+          columns={
+            userGroupGuid
+              ? columns.filter((col) => col.dataIndex !== 'user_group_name')
+              : columns
+          }
+          search={{
+            labelWidth: 'auto',
+            defaultCollapsed: true,
+            optionRender: (_searchConfig, _formProps, dom) => [
+              ...dom.reverse(),
+            ],
+          }}
+          pagination={{
+            defaultPageSize: 20,
+            showSizeChanger: true,
+            showQuickJumper: true,
+          }}
+          scroll={{ x: 1540 }}
+          toolBarRender={() =>
+            userGroupGuid
+              ? [
+                  <Button
+                    key="import"
+                    icon={<SelectOutlined />}
+                    onClick={() => setImportModalVisible(true)}
+                  >
+                    <FormattedMessage
+                      id="pages.userGroups.import"
+                      defaultMessage="Import"
+                    />
+                  </Button>,
+                ]
+              : [
+                  <Button
+                    key="create"
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={openCreateModal}
+                  >
+                    <FormattedMessage
+                      id="pages.users.create"
+                      defaultMessage="Create"
+                    />
+                  </Button>,
+                  <Button
+                    key="invite"
+                    icon={<PlusOutlined />}
+                    onClick={openInviteModal}
+                  >
+                    <FormattedMessage
+                      id="pages.users.invite"
+                      defaultMessage="Invite"
+                    />
+                  </Button>,
+                ]
+          }
+          options={{
+            density: true,
+            setting: {
+              listsHeight: 400,
+            },
+            fullScreen: false,
+            reload: true,
+          }}
+        />
 
-      {/* Edit User Modal */}
-      <Modal
-        title={
-          <FormattedMessage id="pages.users.edit" defaultMessage="Edit User" />
-        }
-        open={editModalVisible}
-        onCancel={() => {
-          setEditModalVisible(false);
-          setEditingUser(null);
-          editForm.resetFields();
-        }}
-        onOk={() => editForm.submit()}
-      >
-        <Form form={editForm} onFinish={handleEdit} layout="vertical">
-          <Form.Item
-            name="name"
-            label={
-              <FormattedMessage
-                id="pages.users.name"
-                defaultMessage="Username"
-              />
-            }
-            rules={[
-              {
-                required: true,
-                message: intl.formatMessage({
-                  id: 'pages.common.pleaseEnterUsername',
-                  defaultMessage: 'Please enter username',
-                }),
-              },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="display_name"
-            label={
-              <FormattedMessage
-                id="pages.users.displayName"
-                defaultMessage="Display Name"
-              />
-            }
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="email"
-            label={
-              <FormattedMessage id="pages.users.email" defaultMessage="Email" />
-            }
-            rules={[
-              {
-                type: 'email',
-                message: intl.formatMessage({
-                  id: 'pages.common.pleaseEnterValidEmail',
-                  defaultMessage: 'Please enter valid email',
-                }),
-              },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="note"
-            label={
-              <FormattedMessage id="pages.users.note" defaultMessage="Note" />
-            }
-          >
-            <Input.TextArea />
-          </Form.Item>
-          <Form.Item
-            name="status"
-            label={
-              <FormattedMessage
-                id="pages.users.status"
-                defaultMessage="Status"
-              />
-            }
-          >
-            <Select
-              options={[
+        {/* Create User Modal */}
+        <Modal
+          title={
+            <FormattedMessage
+              id="pages.users.create"
+              defaultMessage="Create User"
+            />
+          }
+          open={createModalVisible}
+          onCancel={() => setCreateModalVisible(false)}
+          onOk={() => createForm.submit()}
+        >
+          <Form form={createForm} onFinish={handleCreate} layout="vertical">
+            <Form.Item
+              name="name"
+              label={
+                <FormattedMessage
+                  id="pages.users.name"
+                  defaultMessage="Username"
+                />
+              }
+              rules={[
                 {
-                  label: intl.formatMessage({
-                    id: 'pages.users.active',
-                    defaultMessage: 'Active',
+                  required: true,
+                  message: intl.formatMessage({
+                    id: 'pages.common.pleaseEnterUsername',
+                    defaultMessage: 'Please enter username',
                   }),
-                  value: 1,
-                },
-                {
-                  label: intl.formatMessage({
-                    id: 'pages.users.disabled',
-                    defaultMessage: 'Disabled',
-                  }),
-                  value: 0,
-                },
-                {
-                  label: intl.formatMessage({
-                    id: 'pages.users.unverified',
-                    defaultMessage: 'Unverified',
-                  }),
-                  value: -1,
                 },
               ]}
-            />
-          </Form.Item>
-          <Form.Item
-            name="user_group_guid"
-            label={
-              <FormattedMessage
-                id="pages.users.userGroup"
-                defaultMessage="User Group"
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="display_name"
+              label={
+                <FormattedMessage
+                  id="pages.users.displayName"
+                  defaultMessage="Display Name"
+                />
+              }
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="password"
+              label={
+                <FormattedMessage
+                  id="pages.users.password"
+                  defaultMessage="Password"
+                />
+              }
+              rules={[
+                {
+                  required: true,
+                  message: intl.formatMessage({
+                    id: 'pages.common.pleaseEnterPassword',
+                    defaultMessage: 'Please enter password',
+                  }),
+                },
+              ]}
+            >
+              <Input.Password />
+            </Form.Item>
+            <Form.Item
+              name="email"
+              label={
+                <FormattedMessage
+                  id="pages.users.email"
+                  defaultMessage="Email"
+                />
+              }
+              rules={[
+                {
+                  type: 'email',
+                  message: intl.formatMessage({
+                    id: 'pages.common.pleaseEnterValidEmail',
+                    defaultMessage: 'Please enter valid email',
+                  }),
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="note"
+              label={
+                <FormattedMessage id="pages.users.note" defaultMessage="Note" />
+              }
+            >
+              <Input.TextArea />
+            </Form.Item>
+            <Form.Item
+              name="user_group_guid"
+              label={
+                <FormattedMessage
+                  id="pages.users.userGroup"
+                  defaultMessage="User Group"
+                />
+              }
+            >
+              <Select
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                loading={userGroupsLoading}
+                placeholder={intl.formatMessage({
+                  id: 'pages.users.selectUserGroup',
+                  defaultMessage: 'Select user group',
+                })}
+                options={userGroups.map((group) => ({
+                  label: group.name,
+                  value: group.guid,
+                }))}
               />
-            }
-          >
-            <Select
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              loading={userGroupsLoading}
-              placeholder={intl.formatMessage({
-                id: 'pages.users.selectUserGroup',
-                defaultMessage: 'Select user group',
-              })}
-              options={userGroups.map((group) => ({
-                label: group.name,
-                value: group.guid,
-              }))}
-            />
-          </Form.Item>
-          <Form.Item
-            name="is_admin"
-            label={
-              <FormattedMessage
-                id="pages.users.isAdmin"
-                defaultMessage="Admin"
-              />
-            }
-            valuePropName="checked"
-          >
-            <Switch />
-          </Form.Item>
-        </Form>
-      </Modal>
+            </Form.Item>
+          </Form>
+        </Modal>
 
-      {/* Security Settings Modal */}
-      <Modal
-        title={
-          <FormattedMessage
-            id="pages.users.securitySettings"
-            defaultMessage="Security Settings"
-          />
-        }
-        open={securityModalVisible}
-        onCancel={() => {
-          setSecurityModalVisible(false);
-          setEditingUser(null);
-          securityForm.resetFields();
-        }}
-        onOk={() => securityForm.submit()}
-      >
-        <Form
-          form={securityForm}
-          onFinish={handleUpdateSecurity}
-          layout="vertical"
+        {/* Invite User Modal */}
+        <Modal
+          title={
+            <FormattedMessage
+              id="pages.users.invite"
+              defaultMessage="Invite User"
+            />
+          }
+          open={inviteModalVisible}
+          onCancel={() => setInviteModalVisible(false)}
+          onOk={() => inviteForm.submit()}
         >
-          <Form.Item
-            name="tfa_enforce"
-            label={
-              <FormattedMessage
-                id="pages.users.tfaEnforce"
-                defaultMessage="Enforce Two-Factor Authentication"
+          <Form form={inviteForm} onFinish={handleInvite} layout="vertical">
+            <Form.Item
+              name="name"
+              label={
+                <FormattedMessage
+                  id="pages.users.name"
+                  defaultMessage="Username"
+                />
+              }
+              rules={[
+                {
+                  required: true,
+                  message: intl.formatMessage({
+                    id: 'pages.common.pleaseEnterUsername',
+                    defaultMessage: 'Please enter username',
+                  }),
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="display_name"
+              label={
+                <FormattedMessage
+                  id="pages.users.displayName"
+                  defaultMessage="Display Name"
+                />
+              }
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="email"
+              label={
+                <FormattedMessage
+                  id="pages.users.email"
+                  defaultMessage="Email"
+                />
+              }
+              rules={[
+                {
+                  required: true,
+                  message: intl.formatMessage({
+                    id: 'pages.common.pleaseEnterEmail',
+                    defaultMessage: 'Please enter email',
+                  }),
+                },
+                {
+                  type: 'email',
+                  message: intl.formatMessage({
+                    id: 'pages.common.pleaseEnterValidEmail',
+                    defaultMessage: 'Please enter valid email',
+                  }),
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="note"
+              label={
+                <FormattedMessage id="pages.users.note" defaultMessage="Note" />
+              }
+            >
+              <Input.TextArea />
+            </Form.Item>
+            <Form.Item
+              name="user_group_guid"
+              label={
+                <FormattedMessage
+                  id="pages.users.userGroup"
+                  defaultMessage="User Group"
+                />
+              }
+            >
+              <Select
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                loading={userGroupsLoading}
+                placeholder={intl.formatMessage({
+                  id: 'pages.users.selectUserGroup',
+                  defaultMessage: 'Select user group',
+                })}
+                options={userGroups.map((group) => ({
+                  label: group.name,
+                  value: group.guid,
+                }))}
               />
-            }
-            valuePropName="checked"
-          >
-            <Switch />
-          </Form.Item>
-          <Form.Item
-            name="email_verification"
-            label={
-              <FormattedMessage
-                id="pages.users.emailVerification"
-                defaultMessage="Require Email Verification"
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* Edit User Modal */}
+        <Modal
+          title={
+            <FormattedMessage
+              id="pages.users.edit"
+              defaultMessage="Edit User"
+            />
+          }
+          open={editModalVisible}
+          onCancel={() => {
+            setEditModalVisible(false);
+            setEditingUser(null);
+            editForm.resetFields();
+          }}
+          onOk={() => editForm.submit()}
+        >
+          <Form form={editForm} onFinish={handleEdit} layout="vertical">
+            <Form.Item
+              name="name"
+              label={
+                <FormattedMessage
+                  id="pages.users.name"
+                  defaultMessage="Username"
+                />
+              }
+              rules={[
+                {
+                  required: true,
+                  message: intl.formatMessage({
+                    id: 'pages.common.pleaseEnterUsername',
+                    defaultMessage: 'Please enter username',
+                  }),
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="display_name"
+              label={
+                <FormattedMessage
+                  id="pages.users.displayName"
+                  defaultMessage="Display Name"
+                />
+              }
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="email"
+              label={
+                <FormattedMessage
+                  id="pages.users.email"
+                  defaultMessage="Email"
+                />
+              }
+              rules={[
+                {
+                  type: 'email',
+                  message: intl.formatMessage({
+                    id: 'pages.common.pleaseEnterValidEmail',
+                    defaultMessage: 'Please enter valid email',
+                  }),
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="note"
+              label={
+                <FormattedMessage id="pages.users.note" defaultMessage="Note" />
+              }
+            >
+              <Input.TextArea />
+            </Form.Item>
+            <Form.Item
+              name="status"
+              label={
+                <FormattedMessage
+                  id="pages.users.status"
+                  defaultMessage="Status"
+                />
+              }
+            >
+              <Select
+                options={[
+                  {
+                    label: intl.formatMessage({
+                      id: 'pages.users.active',
+                      defaultMessage: 'Active',
+                    }),
+                    value: 1,
+                  },
+                  {
+                    label: intl.formatMessage({
+                      id: 'pages.users.disabled',
+                      defaultMessage: 'Disabled',
+                    }),
+                    value: 0,
+                  },
+                  {
+                    label: intl.formatMessage({
+                      id: 'pages.users.unverified',
+                      defaultMessage: 'Unverified',
+                    }),
+                    value: -1,
+                  },
+                ]}
               />
-            }
-            valuePropName="checked"
+            </Form.Item>
+            <Form.Item
+              name="user_group_guid"
+              label={
+                <FormattedMessage
+                  id="pages.users.userGroup"
+                  defaultMessage="User Group"
+                />
+              }
+            >
+              <Select
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                loading={userGroupsLoading}
+                placeholder={intl.formatMessage({
+                  id: 'pages.users.selectUserGroup',
+                  defaultMessage: 'Select user group',
+                })}
+                options={userGroups.map((group) => ({
+                  label: group.name,
+                  value: group.guid,
+                }))}
+              />
+            </Form.Item>
+            <Form.Item
+              name="is_admin"
+              label={
+                <FormattedMessage
+                  id="pages.users.isAdmin"
+                  defaultMessage="Admin"
+                />
+              }
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* Security Settings Modal */}
+        <Modal
+          title={
+            <FormattedMessage
+              id="pages.users.securitySettings"
+              defaultMessage="Security Settings"
+            />
+          }
+          open={securityModalVisible}
+          onCancel={() => {
+            setSecurityModalVisible(false);
+            setEditingUser(null);
+            securityForm.resetFields();
+          }}
+          onOk={() => securityForm.submit()}
+        >
+          <Form
+            form={securityForm}
+            onFinish={handleUpdateSecurity}
+            layout="vertical"
           >
-            <Switch />
-          </Form.Item>
-        </Form>
-      </Modal>
-    </PageContainer>
+            <Form.Item
+              name="tfa_enforce"
+              label={
+                <FormattedMessage
+                  id="pages.users.tfaEnforce"
+                  defaultMessage="Enforce Two-Factor Authentication"
+                />
+              }
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
+            <Form.Item
+              name="email_verification"
+              label={
+                <FormattedMessage
+                  id="pages.users.emailVerification"
+                  defaultMessage="Require Email Verification"
+                />
+              }
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {userGroupGuid && (
+          <ImportUsersModal
+            open={importModalVisible}
+            userGroupGuid={userGroupGuid}
+            onCancel={() => setImportModalVisible(false)}
+            onSuccess={() => actionRef.current?.reload()}
+          />
+        )}
+
+        <Modal
+          title={
+            <FormattedMessage
+              id="pages.userGroups.moveToGroup"
+              defaultMessage="Move to group"
+            />
+          }
+          open={!!moveUser}
+          onCancel={() => {
+            setMoveUser(null);
+            setMoveDestinationGuid(undefined);
+          }}
+          onOk={() => {
+            if (moveUser && moveDestinationGuid) {
+              void handleMove(moveDestinationGuid, [moveUser.guid]);
+              setMoveUser(null);
+              setMoveDestinationGuid(undefined);
+            }
+          }}
+          okButtonProps={{ disabled: !moveDestinationGuid }}
+          destroyOnHidden
+        >
+          <Select
+            showSearch
+            optionFilterProp="label"
+            style={{ width: '100%' }}
+            loading={userGroupsLoading}
+            value={moveDestinationGuid}
+            onChange={setMoveDestinationGuid}
+            placeholder={intl.formatMessage({
+              id: 'pages.userGroups.selectDestination',
+              defaultMessage: 'Select destination group',
+            })}
+            options={userGroups
+              .filter((g) => g.guid !== userGroupGuid)
+              .map((g) => ({ label: g.name, value: g.guid }))}
+          />
+        </Modal>
+      </PageContainer>
+    </>
   );
 };
 
