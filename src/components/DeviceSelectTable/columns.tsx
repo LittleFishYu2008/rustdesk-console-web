@@ -300,7 +300,12 @@ export const getDeviceColumns = (options?: {
       search: false,
       render: (_: unknown, record: API.DeviceItem) => {
         if (!record.info) return '-';
-        return `${record.info.os || ''} ${record.info.ip || ''}`.trim() || '-';
+        const parts = [
+          record.info.cpu,
+          record.info.memory,
+          record.info.version,
+        ].filter(Boolean);
+        return parts.join(' | ') || '-';
       },
     },
     {
