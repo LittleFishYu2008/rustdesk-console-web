@@ -204,10 +204,10 @@ jobs:
             ghcr.io/${{ github.repository }}:${{ steps.version.outputs.major_minor }}
             ghcr.io/${{ github.repository }}:${{ steps.version.outputs.major }}
             ghcr.io/${{ github.repository }}:latest
-            docker.io/${{ secrets.DOCKERHUB_USERNAME }}/rustdesk-console-web:${{ steps.version.outputs.version }}
-            docker.io/${{ secrets.DOCKERHUB_USERNAME }}/rustdesk-console-web:${{ steps.version.outputs.major_minor }}
-            docker.io/${{ secrets.DOCKERHUB_USERNAME }}/rustdesk-console-web:${{ steps.version.outputs.major }}
-            docker.io/${{ secrets.DOCKERHUB_USERNAME }}/rustdesk-console-web:latest
+            docker.io/databk/rustdesk-console-web:${{ steps.version.outputs.version }}
+            docker.io/databk/rustdesk-console-web:${{ steps.version.outputs.major_minor }}
+            docker.io/databk/rustdesk-console-web:${{ steps.version.outputs.major }}
+            docker.io/databk/rustdesk-console-web:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
