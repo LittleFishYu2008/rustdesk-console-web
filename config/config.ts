@@ -11,6 +11,9 @@ const PUBLIC_PATH: string = '/';
 
 export default defineConfig({
   hash: true,
+  codeSplitting: {
+    jsStrategy: 'granularChunks',
+  },
   publicPath: PUBLIC_PATH,
   routes,
   ignoreMomentLocale: true,
