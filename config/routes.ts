@@ -1,8 +1,14 @@
 export default [
   {
     path: '/user',
-    layout: false,
     routes: [
+      {
+        path: '/user/center',
+        name: 'center',
+        icon: 'user',
+        hideInMenu: true,
+        component: './user/center',
+      },
       {
         path: '/user/login',
         layout: false,
@@ -11,28 +17,7 @@ export default [
       },
       {
         path: '/user',
-        redirect: '/user/login',
-      },
-      {
-        component: '404',
-        path: '/user/*',
-      },
-    ],
-  },
-  {
-    path: '/account',
-    name: 'account',
-    icon: 'user',
-    hideInMenu: true,
-    routes: [
-      {
-        path: '/account',
-        redirect: '/account/center',
-      },
-      {
-        name: 'center',
-        path: '/account/center',
-        component: './account/center',
+        redirect: '/user/center',
       },
     ],
   },
