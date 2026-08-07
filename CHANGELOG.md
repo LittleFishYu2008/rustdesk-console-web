@@ -1,3 +1,45 @@
+# [1.5.0](https://github.com/databk/rustdesk-console-web/compare/1.4.0...1.5.0) (2026-08-07)
+
+
+### Bug Fixes
+
+* add target suffix to binary names to prevent overwrite on upload ([#233](https://github.com/databk/rustdesk-console-web/issues/233)) ([3503339](https://github.com/databk/rustdesk-console-web/commit/350333913d6c18a7e160b7722286371c92e09e83))
+* **address-book:** remove unsupported recycle bin feature ([#241](https://github.com/databk/rustdesk-console-web/issues/241)) ([131fd32](https://github.com/databk/rustdesk-console-web/commit/131fd32c0cbd61a5db77c7e60a23ee6048191dc5))
+* **build:** disable sourcemap in production build when using mako ([#252](https://github.com/databk/rustdesk-console-web/issues/252)) ([1d11da0](https://github.com/databk/rustdesk-console-web/commit/1d11da01ae277d65f3aebdeb48d6a34f8abc3e8a))
+* change update check API from POST to GET with query params ([#237](https://github.com/databk/rustdesk-console-web/issues/237)) ([ae56de6](https://github.com/databk/rustdesk-console-web/commit/ae56de6d00128798bf463c62c37392c26442e9b1))
+* **devices:** display version, cpu and memory in Info column instead of redundant OS info ([#242](https://github.com/databk/rustdesk-console-web/issues/242)) ([f3aa35f](https://github.com/databk/rustdesk-console-web/commit/f3aa35ff8205728dc2ad85e141c0ab4f70d76e3d))
+* **devices:** reduce status column width and narrow ID column ([#243](https://github.com/databk/rustdesk-console-web/issues/243)) ([831f7f5](https://github.com/databk/rustdesk-console-web/commit/831f7f5db8aa0fb4a67990a85b29d6152ecacf77))
+* dynamically adjust device action column width based on button count ([#248](https://github.com/databk/rustdesk-console-web/issues/248)) ([cd9b2c6](https://github.com/databk/rustdesk-console-web/commit/cd9b2c6a8474285f9048847cb774bd88ca4ff2e1))
+* hardcode Docker Hub username as databk in workflow files ([#247](https://github.com/databk/rustdesk-console-web/issues/247)) ([5b8f90e](https://github.com/databk/rustdesk-console-web/commit/5b8f90e1c4e9562a605c1cc3e8161ad1a0da4bd3))
+* prevent spurious 401 'Login expired' prompt on logout ([#253](https://github.com/databk/rustdesk-console-web/issues/253)) ([1edab6c](https://github.com/databk/rustdesk-console-web/commit/1edab6c13c5fc9042dff393e95cf8f0742ae9fc3))
+* reduce connection audit table width to prevent horizontal scrollbar ([#246](https://github.com/databk/rustdesk-console-web/issues/246)) ([9efc2f9](https://github.com/databk/rustdesk-console-web/commit/9efc2f95decd896bd9140b73ee1c11c11e7d9084))
+* **routes:** hoist /user/login to top-level route to restore layout:false ([#260](https://github.com/databk/rustdesk-console-web/issues/260)) ([e3cb940](https://github.com/databk/rustdesk-console-web/commit/e3cb940e47629b0f69b54db03bede8bca2ab1850))
+* skip update-check on login page to avoid false 401 alert ([#213](https://github.com/databk/rustdesk-console-web/issues/213)) ([1509f77](https://github.com/databk/rustdesk-console-web/commit/1509f7712741adcac491d45cbdfce50164bd51a3))
+* use macos-26-intel runner for x86_64-apple-darwin build ([#259](https://github.com/databk/rustdesk-console-web/issues/259)) ([876f199](https://github.com/databk/rustdesk-console-web/commit/876f1993d179eb103539e693f9c538e5567769b9))
+* **user-groups:** remove unsupported note search from user group list ([#239](https://github.com/databk/rustdesk-console-web/issues/239)) ([f5f5e6c](https://github.com/databk/rustdesk-console-web/commit/f5f5e6ca366d4d20af6990aeef9f8af20c7fc4b9))
+* **users:** remove horizontal scrollbar by making table columns responsive ([#236](https://github.com/databk/rustdesk-console-web/issues/236)) ([c6bbfab](https://github.com/databk/rustdesk-console-web/commit/c6bbfab1e0178e291803844c818f6154ebc4bf5a))
+
+
+### Features
+
+* add login session management ([#205](https://github.com/databk/rustdesk-console-web/issues/205)) ([4bc686f](https://github.com/databk/rustdesk-console-web/commit/4bc686ffec09d8d3de2b939c1cae0b4aa94b069c))
+* add Passkey (WebAuthn) frontend integration ([#204](https://github.com/databk/rustdesk-console-web/issues/204)) ([0b4fa01](https://github.com/databk/rustdesk-console-web/commit/0b4fa015f69c6abeda099f88bc1f4e70c69049f9))
+* add PWA support for installable web app ([#217](https://github.com/databk/rustdesk-console-web/issues/217)) ([c332aa7](https://github.com/databk/rustdesk-console-web/commit/c332aa711fa0bf3a77c883cf49e68939f88f5d7c))
+* add standalone executable support with Rust embedded web server ([#198](https://github.com/databk/rustdesk-console-web/issues/198)) ([8773295](https://github.com/databk/rustdesk-console-web/commit/877329542cb88dd00e87626fd7b6789f36686e2e))
+* **ci:** add nightly build workflow ([#215](https://github.com/databk/rustdesk-console-web/issues/215)) ([2c4233f](https://github.com/databk/rustdesk-console-web/commit/2c4233fcfe8ba8ac58c97a4de02e9a4db1445613))
+* **config:** enable code splitting with granularChunks strategy ([#251](https://github.com/databk/rustdesk-console-web/issues/251)) ([4adbf1a](https://github.com/databk/rustdesk-console-web/commit/4adbf1aa7526ac1dead3bcd156ce98b6e6be7a2d))
+* **custom-client:** add retry button for failed builds ([#235](https://github.com/databk/rustdesk-console-web/issues/235)) ([62e40ed](https://github.com/databk/rustdesk-console-web/commit/62e40ed72b05a6c75928cfba54dade2e45ed0fb9))
+* **device-groups:** add name search functionality to device group list ([#240](https://github.com/databk/rustdesk-console-web/issues/240)) ([321cff0](https://github.com/databk/rustdesk-console-web/commit/321cff0d99c808ac591ed63df891607da32e8bf6))
+* **devices:** make ID column clickable with rustdesk:// protocol link ([#244](https://github.com/databk/rustdesk-console-web/issues/244)) ([32d4b3b](https://github.com/databk/rustdesk-console-web/commit/32d4b3bf831289d9ca5371fa524baa14ceec6d62))
+* **groups:** make user group name clickable to open group user list ([#218](https://github.com/databk/rustdesk-console-web/issues/218)) ([1a97fe3](https://github.com/databk/rustdesk-console-web/commit/1a97fe303073393aa90f18ce2606cf1bb5ff76e5))
+* **server:** update default listen port to 21114 and backend URL port to 3000 ([#229](https://github.com/databk/rustdesk-console-web/issues/229)) ([301c14d](https://github.com/databk/rustdesk-console-web/commit/301c14dfbfe18d2103fbd2bfa7aec1c97a68cd1f))
+* set random default color for new tags ([#245](https://github.com/databk/rustdesk-console-web/issues/245)) ([838c9e0](https://github.com/databk/rustdesk-console-web/commit/838c9e0afe2f40778062462293fa2cd3a0b8f2ce))
+* **settings:** support expanded general settings contract ([#249](https://github.com/databk/rustdesk-console-web/issues/249)) ([53bdc5a](https://github.com/databk/rustdesk-console-web/commit/53bdc5aa7e323bed35218606c6f55e8380c67414))
+* **settings:** use public /settings/frontend for bootstrap config ([#250](https://github.com/databk/rustdesk-console-web/issues/250)) ([b3dd7b2](https://github.com/databk/rustdesk-console-web/commit/b3dd7b20adb6c81f6062c0b4dd9224984c859670))
+* **users:** add user_group_name, strategy_name and is_admin query params ([#238](https://github.com/databk/rustdesk-console-web/issues/238)) ([3f6380c](https://github.com/databk/rustdesk-console-web/commit/3f6380c619a600c25b3fdd73f68b70af122e88ed))
+
+
+
 # [1.4.0](https://github.com/databk/rustdesk-console-web/compare/1.3.0...1.4.0) (2026-07-22)
 
 
@@ -53,23 +95,6 @@
 ### Bug Fixes
 
 * align react and react-dom versions to 19.2.7 ([#160](https://github.com/databk/rustdesk-console-web/issues/160)) ([a6decec](https://github.com/databk/rustdesk-console-web/commit/a6dececa384e290cf61abf0720490b6c188eca07)), closes [#527](https://github.com/databk/rustdesk-console-web/issues/527)
-
-
-
-# [1.2.0](https://github.com/databk/rustdesk-console-web/compare/1.1.2...1.2.0) (2026-06-14)
-
-
-### Bug Fixes
-
-* use explicit version tags for Docker images ([#155](https://github.com/databk/rustdesk-console-web/issues/155)) ([3dbc6f8](https://github.com/databk/rustdesk-console-web/commit/3dbc6f8468d03189998fb39cb26d56eba9defcae))
-
-
-### Features
-
-* add LDAP configuration settings page ([#153](https://github.com/databk/rustdesk-console-web/issues/153)) ([9754767](https://github.com/databk/rustdesk-console-web/commit/9754767baeff06c9f2f9d23d228e0abea1c25452))
-* display user avatar in header navigation bar ([#150](https://github.com/databk/rustdesk-console-web/issues/150)) ([2cdba60](https://github.com/databk/rustdesk-console-web/commit/2cdba6051202f92739c8bcd3dfe5d5d72add9273))
-* implement alarm audit query and extract shared name@ip logic ([#151](https://github.com/databk/rustdesk-console-web/issues/151)) ([669aa13](https://github.com/databk/rustdesk-console-web/commit/669aa137e0bed2b83cc00b742f59e846c0a92465))
-* update release workflow to auto-generate version ([#154](https://github.com/databk/rustdesk-console-web/issues/154)) ([cd298ad](https://github.com/databk/rustdesk-console-web/commit/cd298adce8eaf7dc41a66e855c163c8b1fa2a771))
 
 
 
