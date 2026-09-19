@@ -4,6 +4,39 @@ import { FormattedMessage, useIntl } from '@umijs/max';
 import { Button, Divider, Popconfirm, Space, Switch, Tag, Tooltip } from 'antd';
 import React from 'react';
 
+import SvgIcon from '@/components/SvgIcon';
+import { getOidcIconKey } from '@/components/oidcIcon';
+
+const BUILTIN_ICONS = [
+  'github',
+  'gitlab',
+  'google',
+  'apple',
+  'okta',
+  'facebook',
+  'azure',
+  'auth0',
+  'microsoft',
+];
+
+const OidcIcon: React.FC<{ name: string; icon?: string }> = ({
+  name,
+  icon,
+}) => {
+  if (icon) {
+    return <SvgIcon svg={icon} alt={name} />;
+  }
+  const iconKey = getOidcIconKey(name);
+  const svgName = BUILTIN_ICONS.includes(iconKey) ? iconKey : 'default';
+  return (
+    <img
+      src={`/oidc-icons/${svgName}.svg`}
+      alt={name}
+      style={{ width: 20, height: 20 }}
+    />
+  );
+};
+
 interface ColumnHandlers {
   onEdit: (record: API.OidcProvider) => void;
   onDelete: (guid: string) => void;
@@ -35,6 +68,12 @@ const OidcProviderColumns = (
       ),
       dataIndex: 'name',
       width: 180,
+      render: (_, record) => (
+        <Space>
+          <OidcIcon name={record.name} icon={record.icon} />
+          {record.name}
+        </Space>
+      ),
     },
     {
       title: (

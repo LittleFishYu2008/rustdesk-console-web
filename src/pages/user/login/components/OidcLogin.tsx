@@ -1,25 +1,52 @@
-import {
-  GithubOutlined,
-  GoogleOutlined,
-  GitlabOutlined,
-} from '@ant-design/icons';
 import { useIntl } from '@umijs/max';
 import { App, Button, Divider } from 'antd';
 import React, { useState } from 'react';
 import { oidcAuth } from '@/services/rustdesk-console/auth';
 import { getDeviceInfo } from '../utils';
 import { useStyles } from '../styles';
+import SvgIcon from '@/components/SvgIcon';
+import { getOidcIconKey } from '@/components/oidcIcon';
 
-const OIDC_ICONS: Record<string, React.ReactNode> = {
-  github: <GithubOutlined style={{ fontSize: 20 }} />,
-  gitlab: <GitlabOutlined style={{ fontSize: 20 }} />,
-  google: <GoogleOutlined style={{ fontSize: 20 }} />,
-};
+const BUILTIN_ICONS = [
+  'github',
+  'gitlab',
+  'google',
+  'apple',
+  'okta',
+  'facebook',
+  'azure',
+  'auth0',
+  'microsoft',
+];
 
 const OIDC_LABELS: Record<string, string> = {
   github: 'GitHub',
   gitlab: 'GitLab',
   google: 'Google',
+  apple: 'Apple',
+  okta: 'Okta',
+  facebook: 'Facebook',
+  azure: 'Microsoft',
+  auth0: 'Auth0',
+  microsoft: 'Microsoft',
+};
+
+const OidcIcon: React.FC<{ name: string; icon?: string }> = ({
+  name,
+  icon,
+}) => {
+  if (icon) {
+    return <SvgIcon svg={icon} alt={name} />;
+  }
+  const iconKey = getOidcIconKey(name);
+  const svgName = BUILTIN_ICONS.includes(iconKey) ? iconKey : 'default';
+  return (
+    <img
+      src={`/oidc-icons/${svgName}.svg`}
+      alt={name}
+      style={{ width: 20, height: 20 }}
+    />
+  );
 };
 
 interface OidcLoginProps {
@@ -89,7 +116,6 @@ const OidcLogin: React.FC<OidcLoginProps> = ({ options, loading }) => {
       </Divider>
       {options.map((item) => {
         const label = OIDC_LABELS[item.name.toLowerCase()] || item.name;
-        const icon = OIDC_ICONS[item.name.toLowerCase()];
         return (
           <Button
             key={item.name}
@@ -98,7 +124,7 @@ const OidcLogin: React.FC<OidcLoginProps> = ({ options, loading }) => {
             loading={oidcLoading === item.name}
             onClick={() => handleOidcLogin(item.name)}
           >
-            {icon}
+            <OidcIcon name={item.name} icon={item.icon} />
             {intl.formatMessage(
               {
                 id: 'pages.login.oidc.continueWith',
