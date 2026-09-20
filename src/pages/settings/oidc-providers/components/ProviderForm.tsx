@@ -13,7 +13,7 @@ import {
 } from 'antd';
 import { DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
-import OidcIcon, { BUILTIN_ICONS, OIDC_LABELS } from '@/components/OidcIcon';
+import OidcIcon, { BUILTIN_ICONS } from '@/components/OidcIcon';
 
 interface ProviderFormProps {
   mode: 'create' | 'edit';
@@ -36,13 +36,13 @@ const BUILTIN_PROVIDER_PRESETS: Record<
   }
 > = {
   google: {
-    name: 'google',
+    name: 'Google',
     type: 'oidc',
     issuer: 'https://accounts.google.com',
     scope: 'openid email profile',
   },
   github: {
-    name: 'github',
+    name: 'GitHub',
     type: 'oauth2',
     issuer: 'https://github.com',
     scope: 'read:user user:email',
@@ -51,7 +51,7 @@ const BUILTIN_PROVIDER_PRESETS: Record<
     userinfoEndpoint: 'https://api.github.com/user',
   },
   gitlab: {
-    name: 'gitlab',
+    name: 'GitLab',
     type: 'oauth2',
     issuer: 'https://gitlab.com',
     scope: 'read_user',
@@ -60,13 +60,13 @@ const BUILTIN_PROVIDER_PRESETS: Record<
     userinfoEndpoint: 'https://gitlab.com/api/v4/user',
   },
   apple: {
-    name: 'apple',
+    name: 'Apple',
     type: 'oidc',
     issuer: 'https://appleid.apple.com',
     scope: 'name email',
   },
   facebook: {
-    name: 'facebook',
+    name: 'Facebook',
     type: 'oauth2',
     issuer: 'https://graph.facebook.com',
     scope: 'email public_profile',
@@ -75,22 +75,18 @@ const BUILTIN_PROVIDER_PRESETS: Record<
     userinfoEndpoint: 'https://graph.facebook.com/me',
   },
   okta: {
-    name: 'okta',
+    name: 'Okta',
     type: 'oidc',
     scope: 'openid email profile',
   },
-  azure: {
-    name: 'azure',
-    type: 'oidc',
-    scope: 'openid email profile',
-  },
+
   auth0: {
-    name: 'auth0',
+    name: 'Auth0',
     type: 'oidc',
     scope: 'openid email profile',
   },
   microsoft: {
-    name: 'microsoft',
+    name: 'Microsoft',
     type: 'oidc',
     issuer: 'https://login.microsoftonline.com/common',
     scope: 'openid email profile',
@@ -110,6 +106,11 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
   const { message } = App.useApp();
   const [iconPreview, setIconPreview] = useState<string | undefined>(undefined);
   const [providerName, setProviderName] = useState<string>('');
+  const [isBuiltin, setIsBuiltin] = useState(false);
+  const [needsIssuer, setNeedsIssuer] = useState(false);
+  const [selectedPreset, setSelectedPreset] = useState<string>('');
+
+  const PRESETS_WITH_OVERRIDABLE_ISSUER = new Set(['microsoft']);
 
   useEffect(() => {
     if (isEdit && open && currentRecord) {
@@ -132,6 +133,9 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
     } else if (!open) {
       setIconPreview(undefined);
       setProviderName('');
+      setIsBuiltin(false);
+      setNeedsIssuer(false);
+      setSelectedPreset('');
     }
   }, [isEdit, open, currentRecord, form]);
 
@@ -148,6 +152,25 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
         userinfoEndpoint: config.userinfoEndpoint || '',
       });
       setProviderName(config.name);
+      setIsBuiltin(true);
+      setSelectedPreset(preset);
+      setNeedsIssuer(
+        !config.issuer || PRESETS_WITH_OVERRIDABLE_ISSUER.has(preset),
+      );
+    } else {
+      form.setFieldsValue({
+        name: '',
+        type: 'oidc',
+        issuer: '',
+        scope: '',
+        authorizationEndpoint: '',
+        tokenEndpoint: '',
+        userinfoEndpoint: '',
+      });
+      setProviderName('');
+      setIsBuiltin(false);
+      setSelectedPreset('');
+      setNeedsIssuer(false);
     }
   };
 
@@ -185,6 +208,26 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
     setIconPreview(undefined);
   };
 
+  const handleFinish = async (values: any) => {
+    const finalValues = { ...values };
+    if (isBuiltin && selectedPreset) {
+      const config = BUILTIN_PROVIDER_PRESETS[selectedPreset];
+      if (config) {
+        if (!finalValues.type) finalValues.type = config.type;
+        if (!finalValues.issuer) finalValues.issuer = config.issuer || '';
+        if (!finalValues.scope) finalValues.scope = config.scope || '';
+        if (!finalValues.authorizationEndpoint)
+          finalValues.authorizationEndpoint =
+            config.authorizationEndpoint || '';
+        if (!finalValues.tokenEndpoint)
+          finalValues.tokenEndpoint = config.tokenEndpoint || '';
+        if (!finalValues.userinfoEndpoint)
+          finalValues.userinfoEndpoint = config.userinfoEndpoint || '';
+      }
+    }
+    return onFinish(finalValues);
+  };
+
   return (
     <ModalForm
       title={
@@ -199,7 +242,7 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
       }
       open={open}
       onOpenChange={onOpenChange}
-      onFinish={onFinish}
+      onFinish={handleFinish}
       form={form}
       layout="vertical"
       modalProps={{ destroyOnClose: true }}
@@ -227,7 +270,7 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
               <Select.Option key={name} value={name}>
                 <Space>
                   <OidcIcon name={name} width={16} height={16} />
-                  {OIDC_LABELS[name] || name}
+                  {BUILTIN_PROVIDER_PRESETS[name]?.name || name}
                 </Space>
               </Select.Option>
             ))}
@@ -240,59 +283,69 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
           </Select>
         </Form.Item>
       )}
-      <Form.Item
-        name="name"
-        label={
-          <FormattedMessage
-            id="pages.oidcProviders.name"
-            defaultMessage="Provider Name"
+      {isBuiltin ? (
+        <Form.Item name="name" hidden>
+          <Input />
+        </Form.Item>
+      ) : (
+        <Form.Item
+          name="name"
+          label={
+            <FormattedMessage
+              id="pages.oidcProviders.name"
+              defaultMessage="Provider Name"
+            />
+          }
+          rules={[{ required: true }]}
+        >
+          <Input
+            placeholder={intl.formatMessage({
+              id: 'pages.oidcProviders.enterName',
+              defaultMessage: 'Enter provider name',
+            })}
+            onChange={(e) => setProviderName(e.target.value)}
           />
-        }
-        rules={[{ required: true }]}
-      >
-        <Input
-          placeholder={intl.formatMessage({
-            id: 'pages.oidcProviders.enterName',
-            defaultMessage: 'Enter provider name',
-          })}
-          onChange={(e) => setProviderName(e.target.value)}
-        />
-      </Form.Item>
-      <Form.Item
-        name="type"
-        label={
-          <FormattedMessage
-            id="pages.oidcProviders.type"
-            defaultMessage="Type"
+        </Form.Item>
+      )}
+      {!isBuiltin && (
+        <Form.Item
+          name="type"
+          label={
+            <FormattedMessage
+              id="pages.oidcProviders.type"
+              defaultMessage="Type"
+            />
+          }
+          initialValue="oidc"
+        >
+          <Select>
+            <Select.Option value="oidc">OIDC</Select.Option>
+            <Select.Option value="oauth2">OAuth2</Select.Option>
+          </Select>
+        </Form.Item>
+      )}
+      {(!isBuiltin || needsIssuer) && (
+        <Form.Item
+          name="issuer"
+          label={
+            <FormattedMessage
+              id="pages.oidcProviders.issuer"
+              defaultMessage="Issuer URL"
+            />
+          }
+          rules={[
+            { required: true },
+            { type: 'url', message: 'Please enter a valid URL' },
+          ]}
+        >
+          <Input
+            placeholder={intl.formatMessage({
+              id: 'pages.oidcProviders.enterIssuer',
+              defaultMessage: 'Enter issuer URL',
+            })}
           />
-        }
-        initialValue="oidc"
-      >
-        <Select>
-          <Select.Option value="oidc">OIDC</Select.Option>
-          <Select.Option value="oauth2">OAuth2</Select.Option>
-        </Select>
-      </Form.Item>
-      <Form.Item
-        name="issuer"
-        label={
-          <FormattedMessage
-            id="pages.oidcProviders.issuer"
-            defaultMessage="Issuer URL"
-          />
-        }
-        rules={[
-          { required: true },
-          { type: 'url', message: 'Please enter a valid URL' },
-        ]}
-      >
-        <Input
-          placeholder={intl.formatMessage({
-            id: 'pages.oidcProviders.enterIssuer',
-            defaultMessage: 'Enter issuer URL',
-          })}
-        />
-      </Form.Item>
+        </Form.Item>
+      )}
       <Form.Item
         name="clientId"
         label={
@@ -326,137 +379,143 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
           })}
         />
       </Form.Item>
-      <Form.Item
-        name="scope"
-        label={
-          <FormattedMessage
-            id="pages.oidcProviders.scope"
-            defaultMessage="Scope"
-          />
-        }
-      >
-        <Input placeholder="openid email profile" />
-      </Form.Item>
-      <Collapse
-        ghost
-        items={[
-          {
-            key: 'endpoints',
-            label: (
-              <FormattedMessage
-                id="pages.oidcProviders.endpointConfig"
-                defaultMessage="Endpoint Configuration"
-              />
-            ),
-            children: (
-              <>
-                <Form.Item
-                  name="authorizationEndpoint"
-                  label={
-                    <FormattedMessage
-                      id="pages.oidcProviders.authorizationEndpoint"
-                      defaultMessage="Authorization Endpoint"
+      {!isBuiltin && (
+        <Form.Item
+          name="scope"
+          label={
+            <FormattedMessage
+              id="pages.oidcProviders.scope"
+              defaultMessage="Scope"
+            />
+          }
+        >
+          <Input placeholder="openid email profile" />
+        </Form.Item>
+      )}
+      {!isBuiltin && (
+        <Collapse
+          ghost
+          items={[
+            {
+              key: 'endpoints',
+              label: (
+                <FormattedMessage
+                  id="pages.oidcProviders.endpointConfig"
+                  defaultMessage="Endpoint Configuration"
+                />
+              ),
+              children: (
+                <>
+                  <Form.Item
+                    name="authorizationEndpoint"
+                    label={
+                      <FormattedMessage
+                        id="pages.oidcProviders.authorizationEndpoint"
+                        defaultMessage="Authorization Endpoint"
+                      />
+                    }
+                  >
+                    <Input
+                      placeholder={intl.formatMessage({
+                        id: 'pages.oidcProviders.enterEndpoint',
+                        defaultMessage: 'Auto-discovered if empty',
+                      })}
                     />
-                  }
-                >
-                  <Input
-                    placeholder={intl.formatMessage({
-                      id: 'pages.oidcProviders.enterEndpoint',
-                      defaultMessage: 'Auto-discovered if empty',
-                    })}
-                  />
-                </Form.Item>
-                <Form.Item
-                  name="tokenEndpoint"
-                  label={
-                    <FormattedMessage
-                      id="pages.oidcProviders.tokenEndpoint"
-                      defaultMessage="Token Endpoint"
+                  </Form.Item>
+                  <Form.Item
+                    name="tokenEndpoint"
+                    label={
+                      <FormattedMessage
+                        id="pages.oidcProviders.tokenEndpoint"
+                        defaultMessage="Token Endpoint"
+                      />
+                    }
+                  >
+                    <Input
+                      placeholder={intl.formatMessage({
+                        id: 'pages.oidcProviders.enterEndpoint',
+                        defaultMessage: 'Auto-discovered if empty',
+                      })}
                     />
-                  }
-                >
-                  <Input
-                    placeholder={intl.formatMessage({
-                      id: 'pages.oidcProviders.enterEndpoint',
-                      defaultMessage: 'Auto-discovered if empty',
-                    })}
-                  />
-                </Form.Item>
-                <Form.Item
-                  name="userinfoEndpoint"
-                  label={
-                    <FormattedMessage
-                      id="pages.oidcProviders.userinfoEndpoint"
-                      defaultMessage="Userinfo Endpoint"
+                  </Form.Item>
+                  <Form.Item
+                    name="userinfoEndpoint"
+                    label={
+                      <FormattedMessage
+                        id="pages.oidcProviders.userinfoEndpoint"
+                        defaultMessage="Userinfo Endpoint"
+                      />
+                    }
+                  >
+                    <Input
+                      placeholder={intl.formatMessage({
+                        id: 'pages.oidcProviders.enterEndpoint',
+                        defaultMessage: 'Auto-discovered if empty',
+                      })}
                     />
-                  }
-                >
-                  <Input
-                    placeholder={intl.formatMessage({
-                      id: 'pages.oidcProviders.enterEndpoint',
-                      defaultMessage: 'Auto-discovered if empty',
-                    })}
-                  />
-                </Form.Item>
-                <Form.Item
-                  name="jwksUri"
-                  label={
-                    <FormattedMessage
-                      id="pages.oidcProviders.jwksUri"
-                      defaultMessage="JWKS URI"
+                  </Form.Item>
+                  <Form.Item
+                    name="jwksUri"
+                    label={
+                      <FormattedMessage
+                        id="pages.oidcProviders.jwksUri"
+                        defaultMessage="JWKS URI"
+                      />
+                    }
+                  >
+                    <Input
+                      placeholder={intl.formatMessage({
+                        id: 'pages.oidcProviders.enterEndpoint',
+                        defaultMessage: 'Auto-discovered if empty',
+                      })}
                     />
-                  }
-                >
-                  <Input
-                    placeholder={intl.formatMessage({
-                      id: 'pages.oidcProviders.enterEndpoint',
-                      defaultMessage: 'Auto-discovered if empty',
-                    })}
-                  />
-                </Form.Item>
-              </>
-            ),
-          },
-        ]}
-      />
-      <Form.Item
-        label={
-          <FormattedMessage
-            id="pages.oidcProviders.icon"
-            defaultMessage="Icon (SVG)"
-          />
-        }
-      >
-        <Space>
-          <OidcIcon
-            name={providerName}
-            icon={iconPreview}
-            width={24}
-            height={24}
-          />
-          <Upload
-            accept=".svg"
-            maxCount={1}
-            showUploadList={false}
-            beforeUpload={handleSvgUpload}
-          >
-            <Button icon={<UploadOutlined />}>
-              <FormattedMessage
-                id="pages.oidcProviders.uploadSvg"
-                defaultMessage="Upload SVG"
-              />
-            </Button>
-          </Upload>
-          {iconPreview && (
-            <Button icon={<DeleteOutlined />} onClick={clearIcon} danger>
-              <FormattedMessage
-                id="pages.oidcProviders.clearIcon"
-                defaultMessage="Clear"
-              />
-            </Button>
-          )}
-        </Space>
-      </Form.Item>
+                  </Form.Item>
+                </>
+              ),
+            },
+          ]}
+        />
+      )}
+      {!isBuiltin && (
+        <Form.Item
+          label={
+            <FormattedMessage
+              id="pages.oidcProviders.icon"
+              defaultMessage="Icon (SVG)"
+            />
+          }
+        >
+          <Space>
+            <OidcIcon
+              name={providerName}
+              icon={iconPreview}
+              width={24}
+              height={24}
+            />
+            <Upload
+              accept=".svg"
+              maxCount={1}
+              showUploadList={false}
+              beforeUpload={handleSvgUpload}
+            >
+              <Button icon={<UploadOutlined />}>
+                <FormattedMessage
+                  id="pages.oidcProviders.uploadSvg"
+                  defaultMessage="Upload SVG"
+                />
+              </Button>
+            </Upload>
+            {iconPreview && (
+              <Button icon={<DeleteOutlined />} onClick={clearIcon} danger>
+                <FormattedMessage
+                  id="pages.oidcProviders.clearIcon"
+                  defaultMessage="Clear"
+                />
+              </Button>
+            )}
+          </Space>
+        </Form.Item>
+      )}
       <Form.Item name="icon" hidden>
         <Input />
       </Form.Item>
