@@ -19,8 +19,8 @@ import {
   Row,
   Select,
   Space,
-  Statistic,
   Typography,
+  theme,
 } from 'antd';
 import React, {
   type CSSProperties,
@@ -43,6 +43,30 @@ interface DashboardProps {
 
 const cardStyle: CSSProperties = { height: '100%' };
 
+const measureCanvas =
+  typeof document !== 'undefined' ? document.createElement('canvas') : null;
+const measureCtx = measureCanvas?.getContext('2d') ?? null;
+const FONT_STACK =
+  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+
+const measureTextWidth = (text: string, fontSize: number) => {
+  if (!measureCtx) return text.length * fontSize * 0.6;
+  measureCtx.font = `${fontSize}px ${FONT_STACK}`;
+  return measureCtx.measureText(text).width;
+};
+
+const fitFontSize = (
+  text: string,
+  availWidth: number,
+  min: number,
+  max: number,
+) => {
+  if (availWidth <= 0 || !text) return min;
+  const widthAtMax = measureTextWidth(text, max);
+  if (widthAtMax <= availWidth) return max;
+  return Math.max(min, max * (availWidth / widthAtMax));
+};
+
 const getProgressColor = (value: number | null) =>
   value === null
     ? '#d9d9d9'
@@ -56,63 +80,117 @@ const formatPercentage = (value: number | null) =>
   value === null ? '--' : `${value}%`;
 
 const OverviewCard: React.FC<{
-  title: React.ReactNode;
+  title: string;
   total: number;
   icon: React.ReactNode;
   ringData: { label: string; value: number; color: string }[];
 }> = ({ title, total, icon, ringData }) => {
+  const { token } = theme.useToken();
   const ringTotal = ringData.reduce((sum, item) => sum + item.value, 0);
   const ringPercent =
     ringTotal > 0 ? Math.round((ringData[0].value / ringTotal) * 100) : 0;
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => setContainerWidth(el.offsetWidth);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const ringSize = 80;
+  const ringNumberFontSize = fitFontSize(String(total), ringSize - 16, 14, 28);
+  const leftWidth = containerWidth - 48 - ringSize - 16;
+  const labelText = ringData
+    .map((item) => `${item.label}: ${item.value}`)
+    .join('  ');
+  const titleFontSize = fitFontSize(title, leftWidth - 26, 14, 18);
+  const labelFontSize = fitFontSize(labelText, leftWidth, 11, 13);
+
   return (
-    <Card style={cardStyle} variant="borderless">
-      <Flex align="center" gap={16}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <Statistic
-            title={title}
-            value={total}
-            prefix={icon}
-            styles={{ content: { fontSize: 20 } }}
-          />
-          <div style={{ marginTop: 4 }}>
-            <Space size={8}>
-              {ringData.map((item) => (
+    <div ref={containerRef} style={{ height: '100%' }}>
+      <Card style={cardStyle} variant="borderless">
+        <Flex align="center" gap={16}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Flex align="center" gap={8}>
+              <span
+                style={{
+                  fontSize: titleFontSize,
+                  display: 'inline-flex',
+                  flexShrink: 0,
+                }}
+              >
+                {icon}
+              </span>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                 <Text
-                  key={item.label}
-                  type="secondary"
-                  style={{ fontSize: 11 }}
+                  style={{
+                    fontSize: titleFontSize,
+                    fontWeight: 500,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: 'block',
+                  }}
                 >
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      backgroundColor: item.color,
-                      marginRight: 4,
-                    }}
-                  />
-                  {item.label}: {item.value}
+                  {title}
                 </Text>
-              ))}
-            </Space>
+              </div>
+            </Flex>
+            <div
+              style={{
+                marginTop: 4,
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <Space size={8}>
+                {ringData.map((item) => (
+                  <Text key={item.label} style={{ fontSize: labelFontSize }}>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: item.color,
+                        marginRight: 4,
+                      }}
+                    />
+                    {item.label}: {item.value}
+                  </Text>
+                ))}
+              </Space>
+            </div>
           </div>
-        </div>
-        <div style={{ flex: '0 0 auto' }}>
-          <Progress
-            type="circle"
-            percent={ringPercent}
-            size={64}
-            strokeColor={ringData[0].color}
-            railColor={ringData[1]?.color || '#f0f0f0'}
-            format={() => (
-              <span style={{ fontSize: 14, fontWeight: 600 }}>{total}</span>
-            )}
-          />
-        </div>
-      </Flex>
-    </Card>
+          <div style={{ flex: '0 0 auto' }}>
+            <Progress
+              type="circle"
+              percent={ringPercent}
+              size={ringSize}
+              strokeColor={ringData[0].color}
+              railColor={ringData[1]?.color || '#f0f0f0'}
+              format={() => (
+                <span
+                  style={{
+                    fontSize: ringNumberFontSize,
+                    fontWeight: 600,
+                    color: token.colorText,
+                  }}
+                >
+                  {total}
+                </span>
+              )}
+            />
+          </div>
+        </Flex>
+      </Card>
+    </div>
   );
 };
 
@@ -123,9 +201,7 @@ const CountItem: React.FC<{
 }> = ({ icon, label, value }) => (
   <Flex vertical align="center" gap={4}>
     {icon}
-    <Text style={{ fontSize: 12 }} type="secondary">
-      {label}
-    </Text>
+    <Text style={{ fontSize: 12 }}>{label}</Text>
     <Text style={{ fontSize: 18, fontWeight: 600 }}>{value}</Text>
   </Flex>
 );
@@ -272,12 +348,10 @@ const Dashboard: React.FC<DashboardProps> = ({
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} lg={6}>
             <OverviewCard
-              title={
-                <FormattedMessage
-                  id="pages.dashboard.totalUsers"
-                  defaultMessage="Total Users"
-                />
-              }
+              title={intl.formatMessage({
+                id: 'pages.dashboard.totalUsers',
+                defaultMessage: 'Total Users',
+              })}
               total={data?.users.total || 0}
               icon={<UserOutlined style={{ color: '#1890ff' }} />}
               ringData={[
@@ -302,12 +376,10 @@ const Dashboard: React.FC<DashboardProps> = ({
           </Col>
           <Col xs={24} sm={12} lg={6}>
             <OverviewCard
-              title={
-                <FormattedMessage
-                  id="pages.dashboard.totalDevices"
-                  defaultMessage="Total Devices"
-                />
-              }
+              title={intl.formatMessage({
+                id: 'pages.dashboard.totalDevices',
+                defaultMessage: 'Total Devices',
+              })}
               total={data?.devices.total || 0}
               icon={<DesktopOutlined style={{ color: '#52c41a' }} />}
               ringData={[
@@ -332,12 +404,10 @@ const Dashboard: React.FC<DashboardProps> = ({
           </Col>
           <Col xs={24} sm={12} lg={6}>
             <OverviewCard
-              title={
-                <FormattedMessage
-                  id="pages.dashboard.todayConnections"
-                  defaultMessage="Today Connections"
-                />
-              }
+              title={intl.formatMessage({
+                id: 'pages.dashboard.todayConnections',
+                defaultMessage: 'Today Connections',
+              })}
               total={data?.connections.today || 0}
               icon={<ApiOutlined style={{ color: '#722ed1' }} />}
               ringData={[
@@ -362,12 +432,10 @@ const Dashboard: React.FC<DashboardProps> = ({
           </Col>
           <Col xs={24} sm={12} lg={6}>
             <OverviewCard
-              title={
-                <FormattedMessage
-                  id="pages.dashboard.todayTransfers"
-                  defaultMessage="Today Transfers"
-                />
-              }
+              title={intl.formatMessage({
+                id: 'pages.dashboard.todayTransfers',
+                defaultMessage: 'Today Transfers',
+              })}
               total={data?.files.transferredToday || 0}
               icon={<FileOutlined style={{ color: '#13c2c2' }} />}
               ringData={[
