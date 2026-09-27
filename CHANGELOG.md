@@ -1,3 +1,45 @@
+# [1.6.0](https://github.com/databk/rustdesk-console-web/compare/1.5.1...1.6.0) (2026-09-27)
+
+
+### Bug Fixes
+
+* configure public path for GitHub Pages ([#323](https://github.com/databk/rustdesk-console-web/issues/323)) ([6d634ba](https://github.com/databk/rustdesk-console-web/commit/6d634baeffa25792737a797c658fe6f99e3395c4))
+* **dashboard:** align trend card height with left cards ([#328](https://github.com/databk/rustdesk-console-web/issues/328)) ([cce6a7d](https://github.com/databk/rustdesk-console-web/commit/cce6a7d68fc74c0e24f9b88813c96e047a2a36a8))
+* **dashboard:** fetch trend data on initial mount ([#327](https://github.com/databk/rustdesk-console-web/issues/327)) ([9c7d695](https://github.com/databk/rustdesk-console-web/commit/9c7d695b05bf32e782f2666c77229d11336c1e27))
+* **dashboard:** improve color hierarchy and card readability ([#331](https://github.com/databk/rustdesk-console-web/issues/331)) ([146e40c](https://github.com/databk/rustdesk-console-web/commit/146e40c88f411fae8d5dd4b7a7be893ce6ac915b))
+* **devices:** use case-sensitive connect URL and add connection method menu ([#320](https://github.com/databk/rustdesk-console-web/issues/320)) ([8c2861f](https://github.com/databk/rustdesk-console-web/commit/8c2861f51c3fd5ffbab72dd035e107e008f16318))
+* **docker:** add --legacy-peer-deps flag to npm ci in Dockerfile ([#319](https://github.com/databk/rustdesk-console-web/issues/319)) ([f5569a6](https://github.com/databk/rustdesk-console-web/commit/f5569a60ce50abcf53c41b399eb7ea58dc560951)), closes [#317](https://github.com/databk/rustdesk-console-web/issues/317)
+* **i18n:** replace hardcoded text in console audit page ([#334](https://github.com/databk/rustdesk-console-web/issues/334)) ([9ac019f](https://github.com/databk/rustdesk-console-web/commit/9ac019f733165b20db0c40d618d6c83c61c7af99))
+* **locale:** include fr-FR in tests and ru-RU in language options ([#298](https://github.com/databk/rustdesk-console-web/issues/298)) ([d5c6cd6](https://github.com/databk/rustdesk-console-web/commit/d5c6cd6dfea7c18c514bb5cc9e7d20a4330037eb))
+* **login:** use uniform 24px spacing between fields and the Passkey/Login buttons ([#335](https://github.com/databk/rustdesk-console-web/issues/335)) ([40dc789](https://github.com/databk/rustdesk-console-web/commit/40dc78964661f7df2f21bb53d25df4121d238c73))
+* **oidc:** sanitize SVG icons with DOMPurify instead of data URI ([#312](https://github.com/databk/rustdesk-console-web/issues/312)) ([2956c44](https://github.com/databk/rustdesk-console-web/commit/2956c443938d2b8fde8e6fa0bc4988e7ac9124b9))
+* remove incorrect CNAME and update logo to rustdesk official ([#330](https://github.com/databk/rustdesk-console-web/issues/330)) ([6f8ed58](https://github.com/databk/rustdesk-console-web/commit/6f8ed58ff3297066da7b7c51fd96701cb00f3f0c))
+* remove SVG width/height attributes and strip empty URL fields ([#315](https://github.com/databk/rustdesk-console-web/issues/315)) ([046f2b2](https://github.com/databk/rustdesk-console-web/commit/046f2b2c6d0ba76166fbcbbd69aecead4c32990d))
+* **roles:** remove index column from roles list table ([#303](https://github.com/databk/rustdesk-console-web/issues/303)) ([adbdcfb](https://github.com/databk/rustdesk-console-web/commit/adbdcfb2ca938f07126926915bde7cdff85ded31))
+* **strategy:** remove builtin-only options from strategy page ([#301](https://github.com/databk/rustdesk-console-web/issues/301)) ([47fdfd9](https://github.com/databk/rustdesk-console-web/commit/47fdfd91d311d0b14f3733b6cb7713180b72ec72))
+* support GitHub Pages routing ([#324](https://github.com/databk/rustdesk-console-web/issues/324)) ([983f628](https://github.com/databk/rustdesk-console-web/commit/983f6280b10ba4a6a594569d6cc00b48ed4273af))
+* use cargo-cross for aarch64-musl build instead of musl.cc ([#310](https://github.com/databk/rustdesk-console-web/issues/310)) ([2582ef0](https://github.com/databk/rustdesk-console-web/commit/2582ef02b935b8ea2a665a0fb04befb2fa7fe40a))
+
+
+### Features
+
+* add musl binary build targets for x86_64 and aarch64 ([#309](https://github.com/databk/rustdesk-console-web/issues/309)) ([a9acb02](https://github.com/databk/rustdesk-console-web/commit/a9acb020fcc9f17949ebe29fc9d5bb4097c7eeb0))
+* add Russian (ru-RU) localization ([#276](https://github.com/databk/rustdesk-console-web/issues/276)) ([b998b2e](https://github.com/databk/rustdesk-console-web/commit/b998b2e07a21fb7ed6c56c3bb8f379ca2de59340))
+* **audit:** adapt frontend to new audit fields from backend ([#318](https://github.com/databk/rustdesk-console-web/issues/318)) ([7452a3c](https://github.com/databk/rustdesk-console-web/commit/7452a3c57ba669725f7fef6b61502d78513601c7))
+* **audit:** expose console audit log ([#322](https://github.com/databk/rustdesk-console-web/issues/322)) ([44af1f7](https://github.com/databk/rustdesk-console-web/commit/44af1f76887b02e85167880b5e85aef4e352bd35))
+* **dashboard:** redesign dashboard UI with ring charts, combined trend chart, and unified API ([#325](https://github.com/databk/rustdesk-console-web/issues/325)) ([4beb5fb](https://github.com/databk/rustdesk-console-web/commit/4beb5fbf16e1bc5a8e36ad00d4b0409a42626231)), closes [#13c2c2](https://github.com/databk/rustdesk-console-web/issues/13c2c2) [#361](https://github.com/databk/rustdesk-console-web/issues/361)
+* **locale:** add fr-FR (French) language support ([#297](https://github.com/databk/rustdesk-console-web/issues/297)) ([e97776c](https://github.com/databk/rustdesk-console-web/commit/e97776cbf876e90d5fc848147444089ba29c7d11)), closes [#296](https://github.com/databk/rustdesk-console-web/issues/296)
+* **oidc:** adapt monochrome icons to theme and strip preset field from API calls ([#313](https://github.com/databk/rustdesk-console-web/issues/313)) ([d82fe8a](https://github.com/databk/rustdesk-console-web/commit/d82fe8a24c097c6e6076b0dfe275bdcad30fa592))
+* **oidc:** hide built-in config fields when selecting a preset provider ([#314](https://github.com/databk/rustdesk-console-web/issues/314)) ([fe530c8](https://github.com/databk/rustdesk-console-web/commit/fe530c864446e0b0f82d569c5bdd4c4044987f45))
+* **oidc:** unify provider icons with client and support SVG upload ([#308](https://github.com/databk/rustdesk-console-web/issues/308)) ([9970d11](https://github.com/databk/rustdesk-console-web/commit/9970d11cf47acdada5a5d115cc372eee75214331))
+* **rbac:** add permission-aware administration UI ([#281](https://github.com/databk/rustdesk-console-web/issues/281)) ([8b3a977](https://github.com/databk/rustdesk-console-web/commit/8b3a97703dca90908e7675298caed021619f56b3))
+* **settings:** add jwtExpiryDays and auditRetentionDays to general settings ([#300](https://github.com/databk/rustdesk-console-web/issues/300)) ([8ad97e7](https://github.com/databk/rustdesk-console-web/commit/8ad97e7259a57306946a3d9d3cc89249e401804e))
+* **settings:** use two-column masonry layout for general settings ([#321](https://github.com/databk/rustdesk-console-web/issues/321)) ([d9fd1ff](https://github.com/databk/rustdesk-console-web/commit/d9fd1ff26b2389cc1dfab013a2441d6d3f86393e))
+* **strategy:** localize strategy configuration options ([#293](https://github.com/databk/rustdesk-console-web/issues/293)) ([265ece7](https://github.com/databk/rustdesk-console-web/commit/265ece73c03a34d079a9bbfc4228d2437606d632))
+* **users:** add admin password reset in security modal ([#299](https://github.com/databk/rustdesk-console-web/issues/299)) ([d4c9c1e](https://github.com/databk/rustdesk-console-web/commit/d4c9c1e533b48dbb83cfbf17ef704ce5c1099774))
+
+
+
 ## [1.5.1](https://github.com/databk/rustdesk-console-web/compare/1.5.0...1.5.1) (2026-08-12)
 
 
@@ -82,21 +124,6 @@
 * add Portuguese (Brazil) localization support ([#175](https://github.com/databk/rustdesk-console-web/issues/175)) ([811a9fe](https://github.com/databk/rustdesk-console-web/commit/811a9fed8d157d4a96100002206935a89284da2e))
 * add update check support for POST /api/update-check ([#169](https://github.com/databk/rustdesk-console-web/issues/169)) ([04a6527](https://github.com/databk/rustdesk-console-web/commit/04a652757144b0e87d715b5199ecdee29075039e))
 * make SMTP user and pass fields optional to support non-auth servers ([#181](https://github.com/databk/rustdesk-console-web/issues/181)) ([bc47f52](https://github.com/databk/rustdesk-console-web/commit/bc47f527204e3cd05206b7c1502168b9d8e6ea7a))
-
-
-
-## [1.2.2](https://github.com/databk/rustdesk-console-web/compare/1.2.1...1.2.2) (2026-06-20)
-
-
-### Bug Fixes
-
-* resolve invisible 2FA verification inputs and buttons on login page ([#162](https://github.com/databk/rustdesk-console-web/issues/162)) ([f814549](https://github.com/databk/rustdesk-console-web/commit/f814549906dd86626e26795419554c345c81c903))
-* use tfa_type field to determine 2FA verification type on login ([#163](https://github.com/databk/rustdesk-console-web/issues/163)) ([3ac025d](https://github.com/databk/rustdesk-console-web/commit/3ac025df0d7f2ced30991a76ad08b7707c1815df))
-
-
-### Reverts
-
-* Revert "chore(deps-dev): bump @biomejs/biome from 2.4.16 to 2.5.0 (#159)" (#161) ([208fe7f](https://github.com/databk/rustdesk-console-web/commit/208fe7fbf5789a244909dcd1c4df68c33dd35887)), closes [#159](https://github.com/databk/rustdesk-console-web/issues/159) [#161](https://github.com/databk/rustdesk-console-web/issues/161)
 
 
 
